@@ -5,18 +5,22 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  Animated,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [timeLeft, setTimeLeft] = useState(90000);
 
+  // Countdown Timer
   useEffect(() => {
     const interval = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -25,9 +29,33 @@ export default function HomeScreen() {
     const hours = Math.floor((timeLeft % 86400) / 3600);
     const minutes = Math.floor((timeLeft % 3600) / 60);
     const seconds = timeLeft % 60;
-
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   };
+
+  // Glow Animation
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: false,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0,
+          duration: 1500,
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  const glowOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 0.8],
+  });
 
   return (
     <View style={styles.container}>
@@ -37,26 +65,40 @@ export default function HomeScreen() {
         style={styles.header}
       >
         <View style={styles.headerRow}>
-          <View>
-            <View style={styles.logoRow}>
-              <Image
-                source={require("../../assets/logo.png")}
-                style={styles.logo}
-              />
-              <Text style={styles.headerTitle}>DLS</Text>
+
+          {/* LEFT SIDE */}
+          <View style={styles.leftHeader}>
+
+            {/* Back Arrow */}
+            <TouchableOpacity
+              onPress={() => router.replace("/login")}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+
+            {/* Logo + Title */}
+            <View>
+              <View style={styles.logoRow}>
+                <Image
+                  source={require("../../assets/logo.png")}
+                  style={styles.logo}
+                />
+                <Text style={styles.headerTitle}>DLS</Text>
+              </View>
+              <Text style={styles.subtitle}>
+                DIGITAL LOTTERY SYSTEM
+              </Text>
             </View>
-            <Text style={styles.subtitle}>
-              DIGITAL LOTTERY SYSTEM
-            </Text>
+
           </View>
 
-          {/* Wallet Pill */}
+          {/* Wallet */}
           <View style={styles.walletPill}>
             <Text style={styles.walletLabel}>Wallet</Text>
-            <Text style={styles.walletAmount}>
-              700 ETB
-            </Text>
+            <Text style={styles.walletAmount}>700 ETB</Text>
           </View>
+
         </View>
       </LinearGradient>
 
@@ -79,10 +121,6 @@ export default function HomeScreen() {
           colors={["#6d28d9", "#7c3aed"]}
           style={styles.card}
         >
-          {/* Sparkle Overlay */}
-          <View style={styles.sparkle1} />
-          <View style={styles.sparkle2} />
-
           <Text style={styles.cardTitle}>
             Saturday Bonanza
           </Text>
@@ -101,18 +139,20 @@ export default function HomeScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Lottery Balls */}
-          <Image
-            source={{
-              uri: "https://cdn-icons-png.flaticon.com/512/861/861512.png",
-            }}
-            style={styles.ball1}
+          {/* Glow */}
+          <Animated.View
+            style={[
+              styles.glowCircle,
+              { opacity: glowOpacity },
+            ]}
           />
+
+          {/* Coin */}
           <Image
             source={{
-              uri: "https://cdn-icons-png.flaticon.com/512/861/861524.png",
+              uri: "https://cdn-icons-png.flaticon.com/512/138/138292.png",
             }}
-            style={styles.ball2}
+            style={styles.coin}
           />
         </LinearGradient>
 
@@ -121,9 +161,6 @@ export default function HomeScreen() {
           colors={["#f59e0b", "#f97316"]}
           style={styles.card}
         >
-          <View style={styles.sparkle1} />
-          <View style={styles.sparkle2} />
-
           <Text style={styles.cardTitle}>
             Mega Jackpot
           </Text>
@@ -142,17 +179,25 @@ export default function HomeScreen() {
             </Text>
           </TouchableOpacity>
 
+          <Animated.View
+            style={[
+              styles.glowCircle,
+              { opacity: glowOpacity },
+            ]}
+          />
+
           <Image
             source={{
-              uri: "https://cdn-icons-png.flaticon.com/512/861/861512.png",
+              uri: "https://cdn-icons-png.flaticon.com/512/138/138292.png",
             }}
-            style={styles.ball1}
+            style={styles.coin}
           />
         </LinearGradient>
       </ScrollView>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -163,14 +208,22 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 30,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
   },
 
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+
+  leftHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  backButton: {
+    marginRight: 12,
+    padding: 6,
   },
 
   logoRow: {
@@ -239,10 +292,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
 
     shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 15,
+    elevation: 10,
   },
 
   cardTitle: {
@@ -276,39 +329,21 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  ball1: {
-    width: 80,
-    height: 80,
+  coin: {
+    width: 90,
+    height: 90,
     position: "absolute",
     right: 10,
     bottom: 10,
   },
 
-  ball2: {
-    width: 60,
-    height: 60,
+  glowCircle: {
     position: "absolute",
-    right: 80,
-    bottom: 20,
-  },
-
-  sparkle1: {
-    position: "absolute",
-    width: 80,
-    height: 80,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 50,
-    top: -20,
-    right: -20,
-  },
-
-  sparkle2: {
-    position: "absolute",
-    width: 60,
-    height: 60,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: 50,
-    bottom: -20,
-    left: -20,
+    width: 150,
+    height: 150,
+    borderRadius: 100,
+    backgroundColor: "#fde047",
+    right: -40,
+    bottom: -40,
   },
 });
