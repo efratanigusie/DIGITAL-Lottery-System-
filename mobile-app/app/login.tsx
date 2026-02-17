@@ -6,17 +6,24 @@ import {
   StyleSheet,
   Image,
   Animated,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // ✅ STORAGE
+
+const API_URL = "http://YOUR_LOCAL_IP:5000/api"; 
+// ⚠️ IMPORTANT: Replace with your computer IP (NOT localhost)
 
 export default function Login() {
   const router = useRouter();
 
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState(""); // ✅ Added password state
+  const [loading, setLoading] = useState(false);
 
   const floatAnim = useRef(new Animated.Value(0)).current;
 
@@ -60,12 +67,64 @@ export default function Login() {
     setPhone(formatted);
   };
 
+  // =====================================================
+  // ✅ BACKEND INTEGRATION START (LOGIN FUNCTION)
+  // =====================================================
+
+  const handleLogin = async () => {
+    if (!phone || !password) {
+      return Alert.alert("Error", "Phone and password are required");
+    }
+
+    try {
+      setLoading(true);
+
+      // Remove spaces and add country code
+      const cleanedPhone = `251${phone.replace(/\s/g, "")}`;
+
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: cleanedPhone,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setLoading(false);
+        return Alert.alert("Login Failed", data.message);
+      }
+
+      // ✅ Save JWT Token
+      await AsyncStorage.setItem("token", data.token);
+
+      setLoading(false);
+
+      Alert.alert("Success", "Login successful!");
+
+      // ✅ Redirect after successful login
+      router.replace("/(tabs)");
+
+    } catch (error: any) {
+      setLoading(false);
+      Alert.alert("Error", error.message);
+    }
+  };
+
+  // =====================================================
+  // ✅ BACKEND INTEGRATION END
+  // =====================================================
+
   return (
     <LinearGradient
       colors={["#0f5bd7", "#1e88ff", "#2563eb"]}
       style={styles.container}
     >
-      {/* Glow Effect */}
       <View style={styles.glow1} />
       <View style={styles.glow2} />
 
@@ -100,6 +159,8 @@ export default function Login() {
             placeholderTextColor="#9ca3af"
             secureTextEntry={!passwordVisible}
             style={styles.passwordInput}
+            value={password}               // ✅ CONNECTED
+            onChangeText={setPassword}     // ✅ CONNECTED
           />
           <TouchableOpacity
             onPress={() => setPasswordVisible(!passwordVisible)}
@@ -112,14 +173,19 @@ export default function Login() {
           </TouchableOpacity>
         </View>
 
-        {/* Button */}
-        <TouchableOpacity style={styles.button}
-        onPress={() => router.replace("/(tabs)")}>
+        {/* Login Button */}
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={handleLogin}   // ✅ CONNECTED TO BACKEND
+          disabled={loading}
+        >
           <LinearGradient
             colors={["#1d4ed8", "#2563eb"]}
             style={styles.buttonGradient}
           >
-            <Text style={styles.buttonText}>Login</Text>
+            <Text style={styles.buttonText}>
+              {loading ? "Logging in..." : "Login"}
+            </Text>
           </LinearGradient>
         </TouchableOpacity>
 
@@ -138,6 +204,7 @@ export default function Login() {
     </LinearGradient>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
