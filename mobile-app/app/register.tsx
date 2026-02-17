@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "http://YOUR_LOCAL_IP:5000/api"; // ⚠️ change this
+const API_URL = "http://10.190.251.133:5000/api"; // ⚠️ change this
 
 export default function Register() {
   const router = useRouter();

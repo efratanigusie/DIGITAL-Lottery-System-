@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // ✅ STORAGE
 
-const API_URL = "http://YOUR_LOCAL_IP:5000/api"; 
+const API_URL = "http://10.190.251.133:5000/api"; 
 // ⚠️ IMPORTANT: Replace with your computer IP (NOT localhost)
 
 export default function Login() {

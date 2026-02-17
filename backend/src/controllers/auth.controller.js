@@ -1,3 +1,4 @@
+import { validateAndFormatEthiopianPhone } from "../utils/phone.util.js";
 import User from "../models/User.model.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/jwt.util.js";
@@ -6,7 +7,7 @@ import { generateToken } from "../utils/jwt.util.js";
 // REGISTER
 export const register = async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    let { phone, password } = req.body;
 
     if (!phone || !password) {
       return res.status(400).json({
@@ -14,7 +15,16 @@ export const register = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({ phone });
+    // ✅ Validate Ethiopian phone
+    const formattedPhone = validateAndFormatEthiopianPhone(phone);
+
+    if (!formattedPhone) {
+      return res.status(400).json({
+        message: "Invalid Ethiopian phone number",
+      });
+    }
+
+    const existingUser = await User.findOne({ phone: formattedPhone });
 
     if (existingUser) {
       return res.status(400).json({
@@ -25,7 +35,7 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      phone,
+      phone: formattedPhone,
       password: hashedPassword,
     });
 
@@ -50,7 +60,7 @@ export const register = async (req, res) => {
 // LOGIN
 export const login = async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    let { phone, password } = req.body;
 
     if (!phone || !password) {
       return res.status(400).json({
@@ -58,7 +68,16 @@ export const login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ phone });
+    // ✅ Normalize phone
+    const formattedPhone = validateAndFormatEthiopianPhone(phone);
+
+    if (!formattedPhone) {
+      return res.status(400).json({
+        message: "Invalid Ethiopian phone number",
+      });
+    }
+
+    const user = await User.findOne({ phone: formattedPhone });
 
     if (!user) {
       return res.status(400).json({
@@ -66,10 +85,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
