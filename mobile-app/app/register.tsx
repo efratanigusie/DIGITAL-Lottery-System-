@@ -7,22 +7,28 @@ import {
   Image,
   Animated,
   ScrollView,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const API_URL = "http://YOUR_LOCAL_IP:5000/api"; // ⚠️ change this
 
 export default function Register() {
   const router = useRouter();
 
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const floatAnim = useRef(new Animated.Value(0)).current;
 
-  // Floating logo animation
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -62,12 +68,59 @@ export default function Register() {
     setPhone(formatted);
   };
 
+  // 🔥 REGISTER FUNCTION
+  const handleRegister = async () => {
+    if (!phone || !password || !confirmPassword) {
+      return Alert.alert("Error", "All fields are required");
+    }
+
+    if (password !== confirmPassword) {
+      return Alert.alert("Error", "Passwords do not match");
+    }
+
+    try {
+      setLoading(true);
+
+      // remove spaces & add +251
+      const cleanedPhone = `251${phone.replace(/\s/g, "")}`;
+
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: cleanedPhone,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setLoading(false);
+        return Alert.alert("Error", data.message);
+      }
+
+      // Save token
+      await AsyncStorage.setItem("token", data.token);
+
+      setLoading(false);
+
+      Alert.alert("Success", "Account created successfully!");
+
+      router.replace("/(tabs)");
+    } catch (error: any) {
+      setLoading(false);
+      Alert.alert("Error", error.message);
+    }
+  };
+
   return (
     <LinearGradient
       colors={["#0f5bd7", "#1e88ff", "#2563eb"]}
       style={styles.container}
     >
-      {/* Glow Background */}
       <View style={styles.glow1} />
       <View style={styles.glow2} />
 
@@ -87,13 +140,6 @@ export default function Register() {
           <Text style={styles.subtitle}>DIGITAL LOTTERY SYSTEM</Text>
 
           <Text style={styles.createText}>Create Account</Text>
-
-          {/* Full Name */}
-          <TextInput
-            placeholder="Full Name"
-            placeholderTextColor="#9ca3af"
-            style={styles.input}
-          />
 
           {/* Phone */}
           <View style={styles.inputContainer}>
@@ -115,6 +161,8 @@ export default function Register() {
               placeholderTextColor="#9ca3af"
               secureTextEntry={!passwordVisible}
               style={styles.passwordInput}
+              value={password}
+              onChangeText={setPassword}
             />
             <TouchableOpacity
               onPress={() => setPasswordVisible(!passwordVisible)}
@@ -134,6 +182,8 @@ export default function Register() {
               placeholderTextColor="#9ca3af"
               secureTextEntry={!confirmVisible}
               style={styles.passwordInput}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
             />
             <TouchableOpacity
               onPress={() => setConfirmVisible(!confirmVisible)}
@@ -147,22 +197,20 @@ export default function Register() {
           </View>
 
           {/* Register Button */}
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleRegister}
+            disabled={loading}
+          >
             <LinearGradient
               colors={["#1d4ed8", "#2563eb"]}
               style={styles.buttonGradient}
             >
-              <Text style={styles.buttonText}>Register</Text>
+              <Text style={styles.buttonText}>
+                {loading ? "Creating..." : "Register"}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
-
-          <Text style={styles.forgot}>Forgot password?</Text>
-
-          <View style={styles.divider} />
-
-          <Text style={styles.footerText}>
-            Already have an account?
-          </Text>
 
           <TouchableOpacity onPress={() => router.push("/login")}>
             <Text style={styles.link}>Login</Text>
@@ -172,6 +220,7 @@ export default function Register() {
     </LinearGradient>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

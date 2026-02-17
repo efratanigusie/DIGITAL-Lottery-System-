@@ -1,2 +1,9 @@
-const app = require('./src/app');
-app.listen(5000, () => console.log('Server running on port 5000'));
+import app from "./src/app.js";
+import connectDB from "./src/config/db.js";
+import { PORT } from "./src/config/env.js";
+
+connectDB();
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT} 🚀`);
+});
