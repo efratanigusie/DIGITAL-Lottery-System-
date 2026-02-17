@@ -107,14 +107,22 @@ export default function HomeScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>
-            Available Lotteries
-          </Text>
-          <Text style={styles.viewAll}>
-            View All ›
-          </Text>
-        </View>
+  <View style={styles.sectionHeader}>
+  <View style={styles.titleContainer}>
+    <Text style={styles.sectionTitle}>
+      የሎተሪ ጨዋታዎች
+    </Text>
+    <Text style={styles.subtitle}>
+      መልካም ዕድል!
+    </Text>
+  </View>
+
+  <TouchableOpacity>
+    <Text style={styles.viewAll}>View All</Text>
+  </TouchableOpacity>
+</View>
+
+
 
         {/* CARD 1 */}
         <LinearGradient
@@ -122,7 +130,7 @@ export default function HomeScreen() {
           style={styles.card}
         >
           <Text style={styles.cardTitle}>
-            Saturday Bonanza
+            ዕለታዊ ሎተሪ
           </Text>
 
           <Text style={styles.amount}>
@@ -130,12 +138,13 @@ export default function HomeScreen() {
           </Text>
 
           <Text style={styles.time}>
-            Next Draw in {formatTime()}
+            በአንድ ቀን የሚወጣ ሎተሪ ይግዙና ይሸለሙ
+            {/* {formatTime()} */}
           </Text>
 
           <TouchableOpacity style={styles.buyBtn}>
             <Text style={styles.buyText}>
-              Buy Tickets
+             ሙሉ ትኬት 5 ብር
             </Text>
           </TouchableOpacity>
 
@@ -162,20 +171,22 @@ export default function HomeScreen() {
           style={styles.card}
         >
           <Text style={styles.cardTitle}>
-            Mega Jackpot
+            60 ሚሊዮን ሎተሪ
           </Text>
 
           <Text style={styles.amount}>
-            2,500,000 ETB
+            60,000,000 ETB
           </Text>
 
           <Text style={styles.time}>
-            Next Draw in {formatTime()}
+          ለገና የሚወጣ ሎተሪ ይግዙና ይሸለሙ
+        
           </Text>
+           {/* <Text>{formatTime()}</Text> */}
 
           <TouchableOpacity style={styles.buyBtn}>
             <Text style={styles.buyText}>
-              Buy Tickets
+              ሙሉ ትኬት 100 ብር
             </Text>
           </TouchableOpacity>
 
@@ -244,8 +255,9 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    color: "#e0e7ff",
-    fontSize: 12,
+     fontSize: 14,
+     color: "#9CA3AF", // soft gray
+     marginTop: 4,
   },
 
   walletPill: {
@@ -274,15 +286,39 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 16,
+    alignItems: "center",
+  },
+
+  titleContainer: {
+     flexDirection: "column",
   },
 
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+     fontSize: 20,
+    fontWeight: "700",
+   color: "#111827", 
   },
 
   viewAll: {
-    color: "#2563eb",
+    
+     fontSize: 14,
+    fontWeight: "600",
+    color: "#22C55E",
+  },
+sectionHeader: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "flex-end",
+  paddingHorizontal: 16,
+  marginTop: 24,
+  marginBottom: 12,
+},
+  welcomeMessage: {
+    color: "#6b7280", 
+    fontSize: 14,
+    fontWeight: "400",
+    marginTop: 4,
+    
   },
 
   card: {
@@ -312,6 +348,7 @@ const styles = StyleSheet.create({
   },
 
   time: {
+    fontSize: 10,
     color: "#fff",
     marginBottom: 15,
   },
