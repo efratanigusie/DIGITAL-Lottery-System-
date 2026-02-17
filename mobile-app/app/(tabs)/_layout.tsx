@@ -56,6 +56,14 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      {/* 👇 Hide explore tab */}
+      <Tabs.Screen
+        name="explore"
+        options={{
+          href: null, // hides it from tab bar
+        }}
+      />
     </Tabs>
   );
 }
