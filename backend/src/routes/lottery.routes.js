@@ -1,42 +1,37 @@
-import Otp from "../models/otp.model.js";
-import Transaction from "../models/Transaction.model.js";
-import  {sendOtpSMS}    from "../utils/bank.util.js";
+const Otp = require("../models/otp.model");
+const Transaction = require("../models/Transaction.model");
+const bcrypt = require("bcryptjs");
+const { initializeChapaPayment } = require("../utils/chapa.util");
 
-export const verifyOtpAndPay = async (req, res) => {
+exports.verifyOtp = async (req, res) => {
   try {
     const { transactionId, otp } = req.body;
 
     const transaction = await Transaction.findById(transactionId);
-    if (!transaction) {
-      return res.status(404).json({ message: "Transaction not found" });
-    }
+    if (!transaction) return res.status(404).json({ message: "Transaction not found" });
 
-    const storedOtp = await Otp.findOne({
-      phone: transaction.userPhone,
-      code: otp
-    });
+    const storedOtp = await Otp.findOne({ phone: transaction.phone });
 
-    if (!storedOtp || storedOtp.expiresAt < new Date()) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
-    }
+    if (!storedOtp || storedOtp.expiresAt < new Date())
+      return res.status(400).json({ message: "OTP expired" });
 
-    const payment = await processBankPayment({
-      phone: transaction.userPhone,
-      amount: transaction.amount,
-      bank: transaction.bank
-    });
+    const isMatch = await bcrypt.compare(otp, storedOtp.code);
 
-    if (payment.success) {
-      transaction.status = "SUCCESS";
-      await transaction.save();
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid OTP" });
 
-      return res.json({ message: "Payment Successful" });
-    } else {
-      transaction.status = "FAILED";
-      await transaction.save();
+    transaction.status = "OTP_VERIFIED";
+    await transaction.save();
 
-      return res.status(400).json({ message: "Payment Failed" });
-    }
+    const checkout_url = await initializeChapaPayment(
+      transaction.amount,
+      transaction.tx_ref
+    );
+
+    transaction.chapa_url = checkout_url;
+    await transaction.save();
+
+    res.json({ checkout_url });
 
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -1,34 +1,24 @@
-const Transaction = require("../models/Transaction.model");
-const Otp = require("../models/otp.model");
-const { sendOtpSMS } = require("../utils/sms.util");
+const axios = require("axios");
 
-exports.createLotteryOrder = async (req, res) => {
-  try {
-    const { phone, lotteryId, bank } = req.body;
+exports.initializeChapaPayment = async (amount, tx_ref) => {
+  const response = await axios.post(
+    `${process.env.CHAPA_BASE_URL}/transaction/initialize`,
+    {
+      amount,
+      currency: "ETB",
+      email: "user@dls.com",
+      first_name: "Lottery",
+      last_name: "User",
+      tx_ref,
+      callback_url: "http://localhost:5000/api/payment/webhook",
+      return_url: "http://localhost:3000/success"
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`
+      }
+    }
+  );
 
-    const transaction = await Transaction.create({
-      userPhone: phone,
-      lotteryId,
-      amount: 5, // example ticket price
-      bank
-    });
-
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    await Otp.create({
-      phone,
-      code: otpCode,
-      expiresAt: new Date(Date.now() + 5 * 60000)
-    });
-
-    await sendOtpSMS(phone, otpCode);
-
-    res.json({
-      message: "OTP sent",
-      transactionId: transaction._id
-    });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  return response.data.data.checkout_url;
 };

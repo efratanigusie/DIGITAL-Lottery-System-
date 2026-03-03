@@ -1,4 +1,4 @@
-import {processBankPayment}   from "../utils/phone.util.js";
+import { validateAndFormatEthiopianPhone } from "../utils/phone.util.js";
 import User from "../models/User.model.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/jwt.util.js";

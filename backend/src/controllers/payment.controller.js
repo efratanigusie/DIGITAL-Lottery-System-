@@ -1,42 +1,32 @@
-import axios from "axios";
-import Transaction from "../models/Transaction.model.js";
+import  Otp  from "../models/otp.model.js";
+import  Transaction from "../models/Transaction.model.js";
+const bcrypt = require("bcryptjs");
+import { initializeChapaPayment } from "../utils/chapa.util.js";
 
-// ✅ Initialize Payment
-export const initializePayment = async (req, res) => {
+export const verifyOtp = async (req, res) => {
   try {
-    const { transactionId } = req.body;
+    const { transactionId, otp } = req.body;
 
     const transaction = await Transaction.findById(transactionId);
+    if (!transaction) return res.status(404).json({ message: "Transaction not found" });
 
-    if (!transaction) {
-      return res.status(404).json({ message: "Transaction not found" });
-    }
+    const storedOtp = await Otp.findOne({ phone: transaction.phone });
 
-    if (transaction.status !== "OTP_VERIFIED") {
-      return res.status(400).json({ message: "OTP not verified" });
-    }
+    if (!storedOtp || storedOtp.expiresAt < new Date())
+      return res.status(400).json({ message: "OTP expired" });
 
-    const response = await axios.post(
-      `${process.env.CHAPA_BASE_URL}/transaction/initialize`,
-      {
-        amount: transaction.amount,
-        currency: "ETB",
-        email: "user@dls.com",
-        first_name: "Lottery",
-        last_name: "User",
-        tx_ref: transaction.tx_ref,
-        callback_url: `${process.env.BASE_URL}/api/payment/webhook`,
-        return_url: `${process.env.FRONTEND_URL}/success`
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
-          "Content-Type": "application/json"
-        }
-      }
+    const isMatch = await bcrypt.compare(otp, storedOtp.code);
+
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid OTP" });
+
+    transaction.status = "OTP_VERIFIED";
+    await transaction.save();
+
+    const checkout_url = await initializeChapaPayment(
+      transaction.amount,
+      transaction.tx_ref
     );
-
-    const checkout_url = response.data?.data?.checkout_url;
 
     transaction.chapa_url = checkout_url;
     await transaction.save();
@@ -45,26 +35,5 @@ export const initializePayment = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ error: error.message });
-  }
-};
-
-// ✅ Webhook
-export const chapaWebhook = async (req, res) => {
-  try {
-    const { tx_ref } = req.body;
-
-    const transaction = await Transaction.findOne({ tx_ref });
-
-    if (!transaction) {
-      return res.sendStatus(404);
-    }
-
-    transaction.status = "SUCCESS";
-    await transaction.save();
-
-    res.sendStatus(200);
-
-  } catch (error) {
-    res.sendStatus(500);
   }
 };
