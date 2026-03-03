@@ -1,7 +1,8 @@
-const axios = require("axios");
-const Transaction = require("../models/Transaction.model");
+import axios from "axios";
+import Transaction from "../models/Transaction.model.js";
 
-exports.initializePayment = async (req, res) => {
+// ✅ Initialize Payment
+export const initializePayment = async (req, res) => {
   try {
     const { transactionId } = req.body;
 
@@ -24,8 +25,8 @@ exports.initializePayment = async (req, res) => {
         first_name: "Lottery",
         last_name: "User",
         tx_ref: transaction.tx_ref,
-        callback_url: "https://yourdomain.com/api/payment/webhook",
-        return_url: "https://yourfrontend.com/success"
+        callback_url: `${process.env.BASE_URL}/api/payment/webhook`,
+        return_url: `${process.env.FRONTEND_URL}/success`
       },
       {
         headers: {
@@ -35,7 +36,7 @@ exports.initializePayment = async (req, res) => {
       }
     );
 
-    const checkout_url = response.data.data.checkout_url;
+    const checkout_url = response.data?.data?.checkout_url;
 
     transaction.chapa_url = checkout_url;
     await transaction.save();
@@ -44,5 +45,26 @@ exports.initializePayment = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+// ✅ Webhook
+export const chapaWebhook = async (req, res) => {
+  try {
+    const { tx_ref } = req.body;
+
+    const transaction = await Transaction.findOne({ tx_ref });
+
+    if (!transaction) {
+      return res.sendStatus(404);
+    }
+
+    transaction.status = "SUCCESS";
+    await transaction.save();
+
+    res.sendStatus(200);
+
+  } catch (error) {
+    res.sendStatus(500);
   }
 };

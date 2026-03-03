@@ -1,11 +1,12 @@
-const express = require("express");
-const router = express.Router();
-const {
+import express from "express";
+import {
   initializePayment,
   chapaWebhook
-} = require("../controllers/payment.controller");
+} from "../controllers/payment.controller.js";
+
+const router = express.Router();
 
 router.post("/initialize", initializePayment);
 router.post("/webhook", chapaWebhook);
 
-module.exports = router;
+export default router;

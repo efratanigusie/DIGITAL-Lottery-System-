@@ -1,6 +1,6 @@
 import Otp from "../models/otp.model.js";
 import Transaction from "../models/Transaction.model.js";
-import   processBankPayment   from "../utils/bank.util.js";
+import  {sendOtpSMS}    from "../utils/bank.util.js";
 
 export const verifyOtpAndPay = async (req, res) => {
   try {
