@@ -1,10 +1,11 @@
-router.post("/webhook", async (req, res) => {
-  const event = req.body;
+const express = require("express");
+const router = express.Router();
+const {
+  initializePayment,
+  chapaWebhook
+} = require("../controllers/payment.controller");
 
-  console.log("Chapa Webhook:", event);
+router.post("/initialize", initializePayment);
+router.post("/webhook", chapaWebhook);
 
-  // Verify transaction status here
-  // Update Transaction.status = SUCCESS
-
-  res.sendStatus(200);
-});
+module.exports = router;
