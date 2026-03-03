@@ -1,11 +1,11 @@
-const twilio = require("twilio");
+import twilio from "twilio";
 
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
 
-exports.sendOtpSMS = async (phone, code) => {
+export const sendOtpSMS = async (phone, code) => {
   try {
     const message = await client.messages.create({
       body: `Your DLS OTP code is: ${code}`,

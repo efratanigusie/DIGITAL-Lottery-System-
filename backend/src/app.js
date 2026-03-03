@@ -1,15 +1,15 @@
 import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
+import lotteryRoutes from "./routes/lottery.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
 
 const app = express();
-const lotteryRoutes = require("./routes/lottery.routes");
-const paymentRoutes = require("./routes/payment.routes");
 app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
-const lotteryRoutes = require("./routes/lottery.routes");
-const paymentRoutes = require("./routes/payment.routes");
+app.use("./api/lottery", lotteryRoutes );
+app.use("/api/payment", paymentRoutes);
 
-export default app;   // 👈 VERY IMPORTANT
+export default app;   //  VERY IMPORTANT

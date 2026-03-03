@@ -1,8 +1,8 @@
-const Otp = require("../models/Lottery.model");
-const Transaction = require("../models/Transaction.model");
-const { processBankPayment } = require("../utils/bank.util");
+import Otp from "../models/otp.model.js";
+import Transaction from "../models/Transaction.model.js";
+import   processBankPayment   from "../utils/bank.util.js";
 
-exports.verifyOtpAndPay = async (req, res) => {
+export const verifyOtpAndPay = async (req, res) => {
   try {
     const { transactionId, otp } = req.body;
 

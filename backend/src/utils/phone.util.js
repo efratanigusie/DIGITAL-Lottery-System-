@@ -1,26 +1,34 @@
-export const validateAndFormatEthiopianPhone = (phone) => {
-  if (!phone) return null;
+import axios from "axios";
 
-  // Remove spaces and non-digits
-  let cleaned = phone.replace(/\D/g, "");
+export const processBankPayment = async ({ phone, amount }) => {
+  try {
 
-  // Remove country code if exists
-  if (cleaned.startsWith("251")) {
-    cleaned = cleaned.slice(3);
+    const response = await axios.post(
+      `${process.env.CHAPA_BASE_URL}/transaction/initialize`,
+      {
+        amount: amount,
+        currency: "ETB",
+        email: "user@example.com",
+        first_name: "Lottery",
+        last_name: "User",
+        tx_ref: "DLS-" + Date.now(),
+        callback_url: "https://yourdomain.com/api/payment/webhook",
+        return_url: "https://yourapp.com/success"
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`
+        }
+      }
+    );
+
+    return {
+      success: true,
+      checkout_url: response.data.data.checkout_url
+    };
+
+  } catch (error) {
+    console.error("Chapa Error:", error.response?.data);
+    return { success: false };
   }
-
-  // Remove leading zero
-  if (cleaned.startsWith("0")) {
-    cleaned = cleaned.slice(1);
-  }
-
-  // Must start with 9 and be 9 digits
-  const phoneRegex = /^9\d{8}$/;
-
-  if (!phoneRegex.test(cleaned)) {
-    return null;
-  }
-
-  // Return normalized format
-  return `251${cleaned}`;
 };
