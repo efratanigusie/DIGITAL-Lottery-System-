@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
-import {verifyOtpAndPay} from "./routes/lottery.routes.js";
+import verifyOtpAndPay from "./routes/lottery.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
 
 const app = express();

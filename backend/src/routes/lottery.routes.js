@@ -1,14 +1,16 @@
-const Otp = require("../models/otp.model");
-const Transaction = require("../models/Transaction.model");
-const bcrypt = require("bcryptjs");
-const { initializeChapaPayment } = require("../utils/chapa.util");
+import Otp from "../models/otp.model.js";
+import Transaction from "../models/Transaction.model.js";
+import bcrypt from "bcryptjs";
+import { initializeChapaPayment } from "../utils/chapa.util.js";
 
-exports.verifyOtp = async (req, res) => {
+export const verifyOtp = async (req, res) => {
   try {
     const { transactionId, otp } = req.body;
 
     const transaction = await Transaction.findById(transactionId);
-    if (!transaction) return res.status(404).json({ message: "Transaction not found" });
+
+    if (!transaction)
+      return res.status(404).json({ message: "Transaction not found" });
 
     const storedOtp = await Otp.findOne({ phone: transaction.phone });
 
@@ -29,6 +31,7 @@ exports.verifyOtp = async (req, res) => {
     );
 
     transaction.chapa_url = checkout_url;
+
     await transaction.save();
 
     res.json({ checkout_url });
