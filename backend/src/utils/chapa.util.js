@@ -1,4 +1,4 @@
-const axios = require("axios");
+import axios from "axios";
 
 export const initializeChapaPayment = async (amount, tx_ref) => {
   const response = await axios.post(
